@@ -102,6 +102,7 @@ export class OrderService {
           beneficiaryNumber: cleanedPhone,
           operatorSnapshot: pack.operator,
           gigaSnapshot: pack.giga,
+          packNameSnapshot: pack.name, // Required field in schema
           packSnapshot: {
             name: pack.name,
             giga: pack.giga,
@@ -122,6 +123,7 @@ export class OrderService {
         },
         session
       );
+
 
       // 4. Create Wallet Transaction for the debt purchase
       const transactionId = `TX-${Date.now()}-${uuidv4().substring(0, 8).toUpperCase()}`;

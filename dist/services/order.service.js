@@ -81,6 +81,7 @@ class OrderService {
                 beneficiaryNumber: cleanedPhone,
                 operatorSnapshot: pack.operator,
                 gigaSnapshot: pack.giga,
+                packNameSnapshot: pack.name, // Required field in schema
                 packSnapshot: {
                     name: pack.name,
                     giga: pack.giga,

@@ -41,6 +41,24 @@ export const errorHandler = (
     });
   }
 
+  // Handle Mongoose Validation Error
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      success: false,
+      message: err.message,
+      code: ErrorCode.VALIDATION_ERROR
+    });
+  }
+
+  // Handle Mongoose CastError (invalid ObjectId, etc.)
+  if (err.name === 'CastError') {
+    return res.status(400).json({
+      success: false,
+      message: `قيمة غير صالحة: ${(err as any).path || ''}`,
+      code: ErrorCode.VALIDATION_ERROR
+    });
+  }
+
   // Handle JWT errors if thrown directly
   if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
     return res.status(401).json({

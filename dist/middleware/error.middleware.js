@@ -35,6 +35,22 @@ next) => {
             code: isUsername ? types_1.ErrorCode.DUPLICATE_USERNAME : types_1.ErrorCode.VALIDATION_ERROR
         });
     }
+    // Handle Mongoose Validation Error
+    if (err.name === 'ValidationError') {
+        return res.status(400).json({
+            success: false,
+            message: err.message,
+            code: types_1.ErrorCode.VALIDATION_ERROR
+        });
+    }
+    // Handle Mongoose CastError (invalid ObjectId, etc.)
+    if (err.name === 'CastError') {
+        return res.status(400).json({
+            success: false,
+            message: `قيمة غير صالحة: ${err.path || ''}`,
+            code: types_1.ErrorCode.VALIDATION_ERROR
+        });
+    }
     // Handle JWT errors if thrown directly
     if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
         return res.status(401).json({
