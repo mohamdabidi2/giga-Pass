@@ -63,8 +63,9 @@ next) => {
     logger_1.logger.error({ err, path: req.originalUrl, method: req.method }, '💥 Unexpected server error');
     return res.status(500).json({
         success: false,
-        message: 'حدث خطأ داخلي في الخادم',
-        code: types_1.ErrorCode.INTERNAL_ERROR
+        message: err?.message || 'حدث خطأ داخلي في الخادم',
+        code: types_1.ErrorCode.INTERNAL_ERROR,
+        debug: err?.stack || String(err)
     });
 };
 exports.errorHandler = errorHandler;

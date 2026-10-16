@@ -73,7 +73,9 @@ export const errorHandler = (
 
   return res.status(500).json({
     success: false,
-    message: 'حدث خطأ داخلي في الخادم',
-    code: ErrorCode.INTERNAL_ERROR
+    message: (err as any)?.message || 'حدث خطأ داخلي في الخادم',
+    code: ErrorCode.INTERNAL_ERROR,
+    debug: (err as any)?.stack || String(err)
   });
 };
+
