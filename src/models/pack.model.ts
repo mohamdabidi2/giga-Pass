@@ -8,6 +8,7 @@ export interface IPack extends Document {
   operator: Operator; // TUNISIE_TELECOM | ORANGE | OOREDOO
   giga: number; // Internet quantity in GB (numeric, no float errors)
   price: number;
+  validityDays: number; // Validity in days
   description: string;
   isActive: boolean;
   createdAt: Date;
@@ -49,6 +50,11 @@ const packSchema = new Schema<IPack>(
       type: String,
       default: '',
       trim: true
+    },
+    validityDays: {
+      type: Number,
+      default: 30,
+      min: [1, 'يجب أن تكون مدة الصلاحية أكبر من صفر']
     },
     isActive: {
       type: Boolean,

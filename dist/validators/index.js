@@ -71,21 +71,29 @@ exports.updateNetworkSchema = zod_1.z.object({
 });
 exports.createPackSchema = zod_1.z.object({
     body: zod_1.z.object({
-        networkId: zod_1.z.string({ required_error: 'معرف الشبكة مطلوب' }).regex(/^[0-9a-fA-F]{24}$/, 'معرف الشبكة غير صالح'),
         name: zod_1.z.string({ required_error: 'اسم الباقة مطلوب' }).min(2),
-        dataAmount: zod_1.z.string({ required_error: 'حجم البيانات مطلوب' }).min(1),
+        operator: zod_1.z.enum(['TUNISIE_TELECOM', 'ORANGE', 'OOREDOO'], { required_error: 'المشغل مطلوب' }),
+        giga: zod_1.z.number({ required_error: 'حجم البيانات مطلوب' }).positive('يجب أن يكون الحجم أكبر من الصفر'),
         price: zod_1.z.number({ required_error: 'السعر مطلوب' }).positive('يجب أن يكون السعر أكبر من الصفر'),
+        validityDays: zod_1.z.number().int().positive().optional().default(30),
         description: zod_1.z.string().optional().default(''),
-        isActive: zod_1.z.boolean().optional().default(true)
+        isActive: zod_1.z.boolean().optional().default(true),
+        // Legacy optional fields
+        networkId: zod_1.z.string().optional(),
+        dataAmount: zod_1.z.string().optional(),
     })
 });
 exports.updatePackSchema = zod_1.z.object({
     body: zod_1.z.object({
         name: zod_1.z.string().min(2).optional(),
-        dataAmount: zod_1.z.string().optional(),
+        operator: zod_1.z.enum(['TUNISIE_TELECOM', 'ORANGE', 'OOREDOO']).optional(),
+        giga: zod_1.z.number().positive().optional(),
         price: zod_1.z.number().positive('يجب أن يكون السعر أكبر من الصفر').optional(),
+        validityDays: zod_1.z.number().int().positive().optional(),
         description: zod_1.z.string().optional(),
-        isActive: zod_1.z.boolean().optional()
+        isActive: zod_1.z.boolean().optional(),
+        // Legacy optional fields
+        dataAmount: zod_1.z.string().optional(),
     })
 });
 exports.updateUserStatusSchema = zod_1.z.object({

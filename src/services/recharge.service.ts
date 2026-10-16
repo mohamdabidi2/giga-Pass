@@ -136,7 +136,29 @@ export class RechargeService {
     }
 
     const updated = await this.listRepo.updateById(listId, update);
-    return updated;
+    if (!updated) {
+      throw new NotFoundError('قائمة الشحن غير موجودة', ErrorCode.RECHARGE_LIST_NOT_FOUND);
+    }
+    const sims = await this.simRepo.findByListId(listId);
+    const plainPassword = decryptPassword(updated.encryptedPassword);
+    return {
+      _id: updated._id,
+      name: updated.name,
+      email: updated.email,
+      password: plainPassword,
+      operator: updated.operator,
+      isActive: updated.isActive,
+      simsCount: sims.length,
+      totalRemainingGiga: sims.reduce((acc, s) => acc + s.remainingGiga, 0),
+      sims: sims.map(s => ({
+        _id: s._id,
+        phoneNumber: s.phoneNumber,
+        remainingGiga: s.remainingGiga,
+        initialGiga: s.initialGiga,
+        isActive: s.isActive
+      })),
+      createdAt: updated.createdAt
+    };
   }
 
   async deleteList(listId: string, adminId: string) {

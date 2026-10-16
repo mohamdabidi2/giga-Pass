@@ -25,19 +25,48 @@ function encryptPassword(plaintext) {
     // Format: iv_hex:authTag_hex:encrypted_hex
     return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted.toString('hex')}`;
 }
-function decryptPassword(encryptedData) {
-    const [ivHex, authTagHex, encryptedHex] = encryptedData.split(':');
-    if (!ivHex || !authTagHex || !encryptedHex) {
-        throw new Error('Invalid encrypted data format');
+// All possible encryption keys to try during decryption (for migration safety)
+const FALLBACK_SECRETS = [
+    'giga_pass_default_encryption_key_32chars!!',
+    'giga_pass_aes256_super_secret_key_2026_pass',
+    'GigaPassHexor',
+];
+function tryDecryptWithKey(parts, keyBuf) {
+    try {
+        const [ivHex, authTagHex, encryptedHex] = parts;
+        const iv = Buffer.from(ivHex, 'hex');
+        const authTag = Buffer.from(authTagHex, 'hex');
+        const encrypted = Buffer.from(encryptedHex, 'hex');
+        const decipher = crypto_1.default.createDecipheriv(ALGORITHM, keyBuf, iv);
+        decipher.setAuthTag(authTag);
+        const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+        return decrypted.toString('utf8');
     }
-    const iv = Buffer.from(ivHex, 'hex');
-    const authTag = Buffer.from(authTagHex, 'hex');
-    const encrypted = Buffer.from(encryptedHex, 'hex');
-    const key = getEncryptionKey();
-    const decipher = crypto_1.default.createDecipheriv(ALGORITHM, key, iv);
-    decipher.setAuthTag(authTag);
-    const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
-    return decrypted.toString('utf8');
+    catch {
+        return null;
+    }
+}
+function decryptPassword(encryptedData) {
+    if (!encryptedData)
+        return '';
+    const parts = encryptedData.split(':');
+    // Not in encrypted format → return as-is (plain text stored directly)
+    if (parts.length !== 3)
+        return encryptedData;
+    // 1. Try current key first
+    const currentKey = getEncryptionKey();
+    const result = tryDecryptWithKey(parts, currentKey);
+    if (result !== null)
+        return result;
+    // 2. Try all fallback keys
+    for (const secret of FALLBACK_SECRETS) {
+        const keyBuf = Buffer.from(secret.padEnd(KEY_LEN, '0').substring(0, KEY_LEN), 'utf8');
+        const fallbackResult = tryDecryptWithKey(parts, keyBuf);
+        if (fallbackResult !== null)
+            return fallbackResult;
+    }
+    // 3. Last resort: return raw stored value so admin sees something
+    return encryptedData;
 }
 const rechargeListSchema = new mongoose_1.Schema({
     adminId: {

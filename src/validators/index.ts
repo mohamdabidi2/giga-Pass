@@ -76,22 +76,30 @@ export const updateNetworkSchema = z.object({
 
 export const createPackSchema = z.object({
   body: z.object({
-    networkId: z.string({ required_error: 'معرف الشبكة مطلوب' }).regex(/^[0-9a-fA-F]{24}$/, 'معرف الشبكة غير صالح'),
     name: z.string({ required_error: 'اسم الباقة مطلوب' }).min(2),
-    dataAmount: z.string({ required_error: 'حجم البيانات مطلوب' }).min(1),
+    operator: z.enum(['TUNISIE_TELECOM', 'ORANGE', 'OOREDOO'], { required_error: 'المشغل مطلوب' }),
+    giga: z.number({ required_error: 'حجم البيانات مطلوب' }).positive('يجب أن يكون الحجم أكبر من الصفر'),
     price: z.number({ required_error: 'السعر مطلوب' }).positive('يجب أن يكون السعر أكبر من الصفر'),
+    validityDays: z.number().int().positive().optional().default(30),
     description: z.string().optional().default(''),
-    isActive: z.boolean().optional().default(true)
+    isActive: z.boolean().optional().default(true),
+    // Legacy optional fields
+    networkId: z.string().optional(),
+    dataAmount: z.string().optional(),
   })
 });
 
 export const updatePackSchema = z.object({
   body: z.object({
     name: z.string().min(2).optional(),
-    dataAmount: z.string().optional(),
+    operator: z.enum(['TUNISIE_TELECOM', 'ORANGE', 'OOREDOO']).optional(),
+    giga: z.number().positive().optional(),
     price: z.number().positive('يجب أن يكون السعر أكبر من الصفر').optional(),
+    validityDays: z.number().int().positive().optional(),
     description: z.string().optional(),
-    isActive: z.boolean().optional()
+    isActive: z.boolean().optional(),
+    // Legacy optional fields
+    dataAmount: z.string().optional(),
   })
 });
 

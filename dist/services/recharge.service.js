@@ -150,7 +150,29 @@ class RechargeService {
             update.encryptedPassword = (0, recharge_list_model_1.encryptPassword)(data.password);
         }
         const updated = await this.listRepo.updateById(listId, update);
-        return updated;
+        if (!updated) {
+            throw new errors_1.NotFoundError('قائمة الشحن غير موجودة', types_1.ErrorCode.RECHARGE_LIST_NOT_FOUND);
+        }
+        const sims = await this.simRepo.findByListId(listId);
+        const plainPassword = (0, recharge_list_model_1.decryptPassword)(updated.encryptedPassword);
+        return {
+            _id: updated._id,
+            name: updated.name,
+            email: updated.email,
+            password: plainPassword,
+            operator: updated.operator,
+            isActive: updated.isActive,
+            simsCount: sims.length,
+            totalRemainingGiga: sims.reduce((acc, s) => acc + s.remainingGiga, 0),
+            sims: sims.map(s => ({
+                _id: s._id,
+                phoneNumber: s.phoneNumber,
+                remainingGiga: s.remainingGiga,
+                initialGiga: s.initialGiga,
+                isActive: s.isActive
+            })),
+            createdAt: updated.createdAt
+        };
     }
     async deleteList(listId, adminId) {
         await this.getListById(listId, adminId);

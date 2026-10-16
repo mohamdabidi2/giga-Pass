@@ -38,6 +38,11 @@ const packSchema = new mongoose_1.Schema({
         default: '',
         trim: true
     },
+    validityDays: {
+        type: Number,
+        default: 30,
+        min: [1, 'يجب أن تكون مدة الصلاحية أكبر من صفر']
+    },
     isActive: {
         type: Boolean,
         default: true,
