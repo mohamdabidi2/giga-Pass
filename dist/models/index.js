@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AuditLogModel = exports.AnnouncementModel = exports.RefreshTokenModel = exports.WalletTransactionModel = exports.NotificationModel = exports.RechargeHistoryModel = exports.SimModel = exports.decryptPassword = exports.encryptPassword = exports.RechargeListModel = exports.OrderModel = exports.PackModel = exports.UserModel = void 0;
+exports.getConversationId = exports.ChatMessageModel = exports.AuditLogModel = exports.AnnouncementModel = exports.RefreshTokenModel = exports.WalletTransactionModel = exports.NotificationModel = exports.RechargeHistoryModel = exports.SimModel = exports.decryptPassword = exports.encryptPassword = exports.RechargeListModel = exports.OrderModel = exports.PackModel = exports.UserModel = void 0;
 var user_model_1 = require("./user.model");
 Object.defineProperty(exports, "UserModel", { enumerable: true, get: function () { return user_model_1.UserModel; } });
 var pack_model_1 = require("./pack.model");
@@ -25,3 +25,6 @@ var announcement_model_1 = require("./announcement.model");
 Object.defineProperty(exports, "AnnouncementModel", { enumerable: true, get: function () { return announcement_model_1.AnnouncementModel; } });
 var audit_log_model_1 = require("./audit-log.model");
 Object.defineProperty(exports, "AuditLogModel", { enumerable: true, get: function () { return audit_log_model_1.AuditLogModel; } });
+var chat_message_model_1 = require("./chat-message.model");
+Object.defineProperty(exports, "ChatMessageModel", { enumerable: true, get: function () { return chat_message_model_1.ChatMessageModel; } });
+Object.defineProperty(exports, "getConversationId", { enumerable: true, get: function () { return chat_message_model_1.getConversationId; } });

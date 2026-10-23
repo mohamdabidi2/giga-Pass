@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ConflictError = exports.InsufficientBalanceError = exports.NotFoundError = exports.ForbiddenError = exports.UnauthorizedError = exports.ValidationError = exports.AppError = void 0;
+exports.ConflictError = exports.InsufficientBalanceError = exports.NotFoundError = exports.ForbiddenError = exports.UnauthorizedError = exports.BadRequestError = exports.ValidationError = exports.AppError = void 0;
 const types_1 = require("../types");
 class AppError extends Error {
     statusCode;
@@ -24,6 +24,12 @@ class ValidationError extends AppError {
     }
 }
 exports.ValidationError = ValidationError;
+class BadRequestError extends AppError {
+    constructor(message = 'طلب غير صالح', code = types_1.ErrorCode.VALIDATION_ERROR) {
+        super(message, 400, code);
+    }
+}
+exports.BadRequestError = BadRequestError;
 class UnauthorizedError extends AppError {
     constructor(message = 'غير مصرح لك بالوصول', code = types_1.ErrorCode.UNAUTHORIZED) {
         super(message, 401, code);

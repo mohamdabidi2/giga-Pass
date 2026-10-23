@@ -23,6 +23,12 @@ export class ValidationError extends AppError {
   }
 }
 
+export class BadRequestError extends AppError {
+  constructor(message = 'طلب غير صالح', code = ErrorCode.VALIDATION_ERROR) {
+    super(message, 400, code);
+  }
+}
+
 export class UnauthorizedError extends AppError {
   constructor(message = 'غير مصرح لك بالوصول', code = ErrorCode.UNAUTHORIZED) {
     super(message, 401, code);

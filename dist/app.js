@@ -24,6 +24,7 @@ const announcement_routes_1 = __importDefault(require("./routes/announcement.rou
 const notification_routes_1 = __importDefault(require("./routes/notification.routes"));
 const admin_routes_1 = __importDefault(require("./routes/admin.routes"));
 const recharge_routes_1 = __importDefault(require("./routes/recharge.routes"));
+const chat_routes_1 = __importDefault(require("./routes/chat.routes"));
 const createApp = () => {
     const app = (0, express_1.default)();
     // 1. Security Middlewares
@@ -68,6 +69,7 @@ const createApp = () => {
     app.use('/api/notifications', notification_routes_1.default);
     app.use('/api/admin', admin_routes_1.default);
     app.use('/api/recharge', recharge_routes_1.default);
+    app.use('/api/chat', chat_routes_1.default);
     // 8. 404 Route Handler
     app.use((req, res) => {
         res.status(404).json({

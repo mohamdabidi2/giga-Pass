@@ -9,3 +9,4 @@ export { WalletTransactionModel } from './wallet-transaction.model';
 export { RefreshTokenModel } from './refresh-token.model';
 export { AnnouncementModel } from './announcement.model';
 export { AuditLogModel } from './audit-log.model';
+export { ChatMessageModel, IChatMessage, getConversationId } from './chat-message.model';

@@ -53,6 +53,7 @@ var NotificationType;
     NotificationType["RECHARGE_COMPLETED"] = "RECHARGE_COMPLETED";
     NotificationType["SYSTEM"] = "SYSTEM";
     NotificationType["DEBT_SETTLED"] = "DEBT_SETTLED";
+    NotificationType["CHAT_MESSAGE"] = "CHAT_MESSAGE";
 })(NotificationType || (exports.NotificationType = NotificationType = {}));
 var AuditAction;
 (function (AuditAction) {

@@ -41,6 +41,16 @@ const initializeSocket = (server) => {
                 socket.join(`room:admin:${user.userId}`);
                 logger_1.logger.info(`Admin ${user.username} joined room:admin and room:admin:${user.userId}`);
             }
+            // Handle real-time typing events
+            socket.on('chat.typing', (data) => {
+                if (data?.receiverId) {
+                    io.to(`user:${data.receiverId}`).emit('chat.typing', {
+                        senderId: user.userId,
+                        senderName: user.username,
+                        isTyping: !!data.isTyping
+                    });
+                }
+            });
         }
         else {
             logger_1.logger.info(`Anonymous socket client connected: ${socket.id}`);

@@ -20,6 +20,7 @@ import announcementRoutes from './routes/announcement.routes';
 import notificationRoutes from './routes/notification.routes';
 import adminRoutes from './routes/admin.routes';
 import rechargeRoutes from './routes/recharge.routes';
+import chatRoutes from './routes/chat.routes';
 
 export const createApp = (): express.Application => {
   const app = express();
@@ -75,6 +76,7 @@ export const createApp = (): express.Application => {
   app.use('/api/notifications', notificationRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api/recharge', rechargeRoutes);
+  app.use('/api/chat', chatRoutes);
 
   // 8. 404 Route Handler
   app.use((req: Request, res: Response) => {
