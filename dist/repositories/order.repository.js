@@ -4,6 +4,7 @@ exports.OrderRepository = void 0;
 const mongoose_1 = require("mongoose");
 const order_model_1 = require("../models/order.model");
 const types_1 = require("../types");
+const date_util_1 = require("../utils/date.util");
 class OrderRepository {
     async findById(id, session) {
         return order_model_1.OrderModel.findById(id)
@@ -58,12 +59,19 @@ class OrderRepository {
             .sort({ createdAt: -1 })
             .limit(limit);
     }
-    async getTodayRevenue(adminId) {
-        const startOfDay = new Date();
-        startOfDay.setHours(0, 0, 0, 0);
+    async getTodayRevenue(adminId, startOfDay, endOfDay) {
+        const bounds = startOfDay && endOfDay ? { startOfDay, endOfDay } : (0, date_util_1.getTunisiaDayBounds)();
         const match = {
-            status: { $in: [types_1.OrderStatus.COMPLETED, types_1.OrderStatus.PROCESSING, types_1.OrderStatus.CONFIRMED] },
-            createdAt: { $gte: startOfDay }
+            $or: [
+                {
+                    createdAt: { $gte: bounds.startOfDay, $lte: bounds.endOfDay },
+                    status: { $nin: [types_1.OrderStatus.CANCELLED, types_1.OrderStatus.REJECTED, types_1.OrderStatus.FAILED] }
+                },
+                {
+                    completedAt: { $gte: bounds.startOfDay, $lte: bounds.endOfDay },
+                    status: types_1.OrderStatus.COMPLETED
+                }
+            ]
         };
         if (adminId) {
             match.adminId = new mongoose_1.Types.ObjectId(adminId);
@@ -78,6 +86,25 @@ class OrderRepository {
             }
         ]);
         return result[0]?.total || 0;
+    }
+    async getTodayOrdersCount(adminId, startOfDay, endOfDay) {
+        const bounds = startOfDay && endOfDay ? { startOfDay, endOfDay } : (0, date_util_1.getTunisiaDayBounds)();
+        const match = {
+            $or: [
+                {
+                    createdAt: { $gte: bounds.startOfDay, $lte: bounds.endOfDay },
+                    status: { $nin: [types_1.OrderStatus.CANCELLED, types_1.OrderStatus.REJECTED, types_1.OrderStatus.FAILED] }
+                },
+                {
+                    completedAt: { $gte: bounds.startOfDay, $lte: bounds.endOfDay },
+                    status: types_1.OrderStatus.COMPLETED
+                }
+            ]
+        };
+        if (adminId) {
+            match.adminId = new mongoose_1.Types.ObjectId(adminId);
+        }
+        return order_model_1.OrderModel.countDocuments(match);
     }
     async getTotalRevenue(adminId) {
         const match = {

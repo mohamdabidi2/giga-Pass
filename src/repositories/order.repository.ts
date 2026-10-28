@@ -1,6 +1,7 @@
 import { ClientSession, FilterQuery, UpdateQuery, Types } from 'mongoose';
 import { IOrder, OrderModel } from '../models/order.model';
 import { OrderStatus } from '../types';
+import { getTunisiaDayBounds } from '../utils/date.util';
 
 export class OrderRepository {
   async findById(id: string, session?: ClientSession): Promise<IOrder | null> {
@@ -67,13 +68,20 @@ export class OrderRepository {
       .limit(limit);
   }
 
-  async getTodayRevenue(adminId?: string): Promise<number> {
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+  async getTodayRevenue(adminId?: string, startOfDay?: Date, endOfDay?: Date): Promise<number> {
+    const bounds = startOfDay && endOfDay ? { startOfDay, endOfDay } : getTunisiaDayBounds();
 
     const match: any = {
-      status: { $in: [OrderStatus.COMPLETED, OrderStatus.PROCESSING, OrderStatus.CONFIRMED] },
-      createdAt: { $gte: startOfDay }
+      $or: [
+        {
+          createdAt: { $gte: bounds.startOfDay, $lte: bounds.endOfDay },
+          status: { $nin: [OrderStatus.CANCELLED, OrderStatus.REJECTED, OrderStatus.FAILED] }
+        },
+        {
+          completedAt: { $gte: bounds.startOfDay, $lte: bounds.endOfDay },
+          status: OrderStatus.COMPLETED
+        }
+      ]
     };
     if (adminId) {
       match.adminId = new Types.ObjectId(adminId);
@@ -90,6 +98,28 @@ export class OrderRepository {
     ]);
 
     return result[0]?.total || 0;
+  }
+
+  async getTodayOrdersCount(adminId?: string, startOfDay?: Date, endOfDay?: Date): Promise<number> {
+    const bounds = startOfDay && endOfDay ? { startOfDay, endOfDay } : getTunisiaDayBounds();
+
+    const match: any = {
+      $or: [
+        {
+          createdAt: { $gte: bounds.startOfDay, $lte: bounds.endOfDay },
+          status: { $nin: [OrderStatus.CANCELLED, OrderStatus.REJECTED, OrderStatus.FAILED] }
+        },
+        {
+          completedAt: { $gte: bounds.startOfDay, $lte: bounds.endOfDay },
+          status: OrderStatus.COMPLETED
+        }
+      ]
+    };
+    if (adminId) {
+      match.adminId = new Types.ObjectId(adminId);
+    }
+
+    return OrderModel.countDocuments(match);
   }
 
   async getTotalRevenue(adminId?: string): Promise<number> {

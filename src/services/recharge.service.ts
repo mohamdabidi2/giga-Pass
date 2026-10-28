@@ -17,6 +17,8 @@ import { AppError, NotFoundError, ForbiddenError } from '../utils/errors';
 import { SocketEmitter } from '../sockets/socket.service';
 import { FcmEmitter } from './fcm.service';
 import { AuditLogRepository } from '../repositories/audit-log.repository';
+import { saveRechargeScreenshot } from './recharge-cleanup.service';
+import { logger } from '../utils/logger';
 
 export class RechargeService {
   private listRepo: RechargeListRepository;
@@ -265,8 +267,9 @@ export class RechargeService {
     listId: string;
     simId: string;
     notes?: string;
+    screenshotBase64?: string;
   }) {
-    const { adminId, orderId, listId, simId, notes } = params;
+    const { adminId, orderId, listId, simId, notes, screenshotBase64 } = params;
 
     // 1. Fetch order
     const order = await this.orderRepo.findById(orderId);
@@ -319,6 +322,16 @@ export class RechargeService {
       );
     }
 
+    // Save recharge screenshot proof if provided
+    let screenshotUrl: string | undefined;
+    if (screenshotBase64 && screenshotBase64.trim().length > 30) {
+      try {
+        screenshotUrl = await saveRechargeScreenshot(orderId, screenshotBase64);
+      } catch (err) {
+        logger.error(`Failed to save recharge screenshot: ${err}`);
+      }
+    }
+
     // 6. Atomic MongoDB Transaction
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -348,9 +361,16 @@ export class RechargeService {
       order.selectedSimId = new Types.ObjectId(simId);
       order.completedAt = now;
       order.adminNotes = notes || order.adminNotes;
+      if (screenshotUrl) {
+        order.rechargeScreenshot = screenshotUrl;
+        order.rechargeScreenshotUploadedAt = now;
+        order.rechargeScreenshotExpired = false;
+      }
       order.timeline.push({
         status: OrderStatus.COMPLETED,
-        message: `تم الشحن بنجاح بواسطة الشريحة: ${sim.phoneNumber} (خصم ${requiredGiga} GB)`,
+        message: screenshotUrl
+          ? `تم الشحن بنجاح بواسطة الشريحة: ${sim.phoneNumber} (خصم ${requiredGiga} GB) وإرفاق كابتير الإثبات`
+          : `تم الشحن بنجاح بواسطة الشريحة: ${sim.phoneNumber} (خصم ${requiredGiga} GB)`,
         actorType: 'ADMIN',
         actorId: adminId,
         createdAt: now
@@ -369,6 +389,9 @@ export class RechargeService {
           deductedGiga: requiredGiga,
           balanceBefore,
           balanceAfter,
+          screenshot: screenshotUrl || undefined,
+          screenshotUploadedAt: screenshotUrl ? now : undefined,
+          screenshotExpired: false,
           completedAt: now
         },
         session

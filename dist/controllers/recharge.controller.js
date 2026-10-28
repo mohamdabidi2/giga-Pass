@@ -129,13 +129,14 @@ class RechargeController {
     completeRecharge = async (req, res, next) => {
         try {
             const adminId = req.user.userId;
-            const { orderId, listId, simId, notes } = req.body;
+            const { orderId, listId, simId, notes, screenshotBase64 } = req.body;
             const result = await this.rechargeService.completeRecharge({
                 adminId,
                 orderId,
                 listId,
                 simId,
-                notes
+                notes,
+                screenshotBase64
             });
             return response_1.ApiResponse.success(res, result, 'تم إتمام عملية الشحن وخصم الرصيد بنجاح! 🚀');
         }

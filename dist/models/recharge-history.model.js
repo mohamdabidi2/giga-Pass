@@ -51,6 +51,18 @@ const rechargeHistorySchema = new mongoose_1.Schema({
         type: Date,
         required: true,
         default: Date.now
+    },
+    screenshot: {
+        type: String,
+        default: null
+    },
+    screenshotUploadedAt: {
+        type: Date,
+        default: null
+    },
+    screenshotExpired: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: { createdAt: true, updatedAt: false },

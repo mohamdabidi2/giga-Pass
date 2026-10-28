@@ -110,6 +110,9 @@ const orderSchema = new mongoose_1.Schema({
         type: mongoose_1.Schema.Types.Mixed,
         default: null
     },
+    rechargeScreenshot: { type: String, default: null },
+    rechargeScreenshotUploadedAt: { type: Date, default: null },
+    rechargeScreenshotExpired: { type: Boolean, default: false },
     completedAt: Date,
     cancelledAt: Date,
     processedAt: Date,

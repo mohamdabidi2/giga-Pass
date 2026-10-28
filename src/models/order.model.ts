@@ -27,6 +27,9 @@ export interface IOrder extends Document {
   // Recharge data (filled when admin completes)
   selectedListId?: Types.ObjectId;
   selectedSimId?: Types.ObjectId;
+  rechargeScreenshot?: string;
+  rechargeScreenshotUploadedAt?: Date;
+  rechargeScreenshotExpired?: boolean;
   completedAt?: Date;
   cancelledAt?: Date;
   processedAt?: Date;
@@ -153,6 +156,9 @@ const orderSchema = new Schema<IOrder>(
       type: Schema.Types.Mixed,
       default: null
     },
+    rechargeScreenshot: { type: String, default: null },
+    rechargeScreenshotUploadedAt: { type: Date, default: null },
+    rechargeScreenshotExpired: { type: Boolean, default: false },
     completedAt: Date,
     cancelledAt: Date,
     processedAt: Date,

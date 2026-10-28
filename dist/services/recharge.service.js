@@ -47,6 +47,8 @@ const errors_1 = require("../utils/errors");
 const socket_service_1 = require("../sockets/socket.service");
 const fcm_service_1 = require("./fcm.service");
 const audit_log_repository_1 = require("../repositories/audit-log.repository");
+const recharge_cleanup_service_1 = require("./recharge-cleanup.service");
+const logger_1 = require("../utils/logger");
 class RechargeService {
     listRepo;
     simRepo;
@@ -256,7 +258,7 @@ class RechargeService {
     }
     // ─── Execution Flow (Dialog 'تم الشحن') ─────────────────────────────────────
     async completeRecharge(params) {
-        const { adminId, orderId, listId, simId, notes } = params;
+        const { adminId, orderId, listId, simId, notes, screenshotBase64 } = params;
         // 1. Fetch order
         const order = await this.orderRepo.findById(orderId);
         if (!order) {
@@ -293,6 +295,16 @@ class RechargeService {
         if (orderOperator && sim.operator !== orderOperator) {
             throw new errors_1.AppError(`مشغل الشريحة (${sim.operator}) لا يطابق مشغل الطلب (${orderOperator})`, 400, types_1.ErrorCode.OPERATOR_MISMATCH);
         }
+        // Save recharge screenshot proof if provided
+        let screenshotUrl;
+        if (screenshotBase64 && screenshotBase64.trim().length > 30) {
+            try {
+                screenshotUrl = await (0, recharge_cleanup_service_1.saveRechargeScreenshot)(orderId, screenshotBase64);
+            }
+            catch (err) {
+                logger_1.logger.error(`Failed to save recharge screenshot: ${err}`);
+            }
+        }
         // 6. Atomic MongoDB Transaction
         const session = await mongoose_1.default.startSession();
         session.startTransaction();
@@ -318,9 +330,16 @@ class RechargeService {
             order.selectedSimId = new mongoose_1.Types.ObjectId(simId);
             order.completedAt = now;
             order.adminNotes = notes || order.adminNotes;
+            if (screenshotUrl) {
+                order.rechargeScreenshot = screenshotUrl;
+                order.rechargeScreenshotUploadedAt = now;
+                order.rechargeScreenshotExpired = false;
+            }
             order.timeline.push({
                 status: types_1.OrderStatus.COMPLETED,
-                message: `تم الشحن بنجاح بواسطة الشريحة: ${sim.phoneNumber} (خصم ${requiredGiga} GB)`,
+                message: screenshotUrl
+                    ? `تم الشحن بنجاح بواسطة الشريحة: ${sim.phoneNumber} (خصم ${requiredGiga} GB) وإرفاق كابتير الإثبات`
+                    : `تم الشحن بنجاح بواسطة الشريحة: ${sim.phoneNumber} (خصم ${requiredGiga} GB)`,
                 actorType: 'ADMIN',
                 actorId: adminId,
                 createdAt: now
@@ -336,6 +355,9 @@ class RechargeService {
                 deductedGiga: requiredGiga,
                 balanceBefore,
                 balanceAfter,
+                screenshot: screenshotUrl || undefined,
+                screenshotUploadedAt: screenshotUrl ? now : undefined,
+                screenshotExpired: false,
                 completedAt: now
             }, session);
             // Commit transaction

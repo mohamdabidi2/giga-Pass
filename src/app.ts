@@ -22,6 +22,9 @@ import adminRoutes from './routes/admin.routes';
 import rechargeRoutes from './routes/recharge.routes';
 import chatRoutes from './routes/chat.routes';
 
+import path from 'path';
+import { ensureUploadsDirExists, startPeriodicScreenshotCleanup } from './services/recharge-cleanup.service';
+
 export const createApp = (): express.Application => {
   const app = express();
 
@@ -44,8 +47,15 @@ export const createApp = (): express.Application => {
   app.options('*', cors(corsOptions));
 
   // 2. Parsing Middlewares
-  app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json({ limit: '15mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '15mb' }));
+
+  // Static files for uploaded recharge screenshots
+  ensureUploadsDirExists();
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+  // Initialize 7-day auto-cleanup timer for recharge screenshots
+  startPeriodicScreenshotCleanup();
 
   // 3. Observability
   app.use(requestLogger);

@@ -4,7 +4,19 @@ import { Operator } from '../types';
 
 export class PackRepository {
   async findAll(filter: FilterQuery<IPack> = {}): Promise<IPack[]> {
-    return PackModel.find(filter).sort({ price: 1 });
+    const packs = await PackModel.find(filter);
+    const opOrder: Record<string, number> = {
+      [Operator.TUNISIE_TELECOM]: 1,
+      [Operator.ORANGE]: 2,
+      [Operator.OOREDOO]: 3
+    };
+    return packs.sort((a, b) => {
+      const orderA = opOrder[a.operator] || 99;
+      const orderB = opOrder[b.operator] || 99;
+      if (orderA !== orderB) return orderA - orderB;
+      if (a.giga !== b.giga) return a.giga - b.giga;
+      return a.price - b.price;
+    });
   }
 
   async findByAdminId(adminId: string, activeOnly = true): Promise<IPack[]> {
@@ -12,7 +24,7 @@ export class PackRepository {
     if (activeOnly) {
       filter.isActive = true;
     }
-    return PackModel.find(filter).sort({ price: 1 });
+    return this.findAll(filter);
   }
 
   async findByOperator(adminId: string, operator: Operator, activeOnly = true): Promise<IPack[]> {
@@ -23,7 +35,11 @@ export class PackRepository {
     if (activeOnly) {
       filter.isActive = true;
     }
-    return PackModel.find(filter).sort({ price: 1 });
+    const packs = await PackModel.find(filter);
+    return packs.sort((a, b) => {
+      if (a.giga !== b.giga) return a.giga - b.giga;
+      return a.price - b.price;
+    });
   }
 
   async findById(id: string): Promise<IPack | null> {

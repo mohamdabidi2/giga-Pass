@@ -3,16 +3,31 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PackRepository = void 0;
 const mongoose_1 = require("mongoose");
 const pack_model_1 = require("../models/pack.model");
+const types_1 = require("../types");
 class PackRepository {
     async findAll(filter = {}) {
-        return pack_model_1.PackModel.find(filter).sort({ price: 1 });
+        const packs = await pack_model_1.PackModel.find(filter);
+        const opOrder = {
+            [types_1.Operator.TUNISIE_TELECOM]: 1,
+            [types_1.Operator.ORANGE]: 2,
+            [types_1.Operator.OOREDOO]: 3
+        };
+        return packs.sort((a, b) => {
+            const orderA = opOrder[a.operator] || 99;
+            const orderB = opOrder[b.operator] || 99;
+            if (orderA !== orderB)
+                return orderA - orderB;
+            if (a.giga !== b.giga)
+                return a.giga - b.giga;
+            return a.price - b.price;
+        });
     }
     async findByAdminId(adminId, activeOnly = true) {
         const filter = { adminId: new mongoose_1.Types.ObjectId(adminId) };
         if (activeOnly) {
             filter.isActive = true;
         }
-        return pack_model_1.PackModel.find(filter).sort({ price: 1 });
+        return this.findAll(filter);
     }
     async findByOperator(adminId, operator, activeOnly = true) {
         const filter = {
@@ -22,7 +37,12 @@ class PackRepository {
         if (activeOnly) {
             filter.isActive = true;
         }
-        return pack_model_1.PackModel.find(filter).sort({ price: 1 });
+        const packs = await pack_model_1.PackModel.find(filter);
+        return packs.sort((a, b) => {
+            if (a.giga !== b.giga)
+                return a.giga - b.giga;
+            return a.price - b.price;
+        });
     }
     async findById(id) {
         return pack_model_1.PackModel.findById(id);

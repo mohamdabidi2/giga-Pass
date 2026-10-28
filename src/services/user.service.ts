@@ -17,6 +17,7 @@ import {
   ErrorCode
 } from '../types';
 import { NotFoundError, AppError, ForbiddenError, ConflictError } from '../utils/errors';
+import { getTunisiaDayBounds } from '../utils/date.util';
 import { SocketEmitter } from '../sockets/socket.service';
 import { FcmEmitter } from './fcm.service';
 
@@ -85,9 +86,7 @@ export class UserService {
   }
 
   async getAdminDashboard(adminId: string) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
+    const { startOfDay, endOfDay } = getTunisiaDayBounds();
     const adminObjectId = new Types.ObjectId(adminId);
 
     const [
@@ -114,8 +113,8 @@ export class UserService {
       this.orderRepo.count({ adminId: adminObjectId }),
       this.orderRepo.count({ adminId: adminObjectId, status: OrderStatus.PENDING }),
       this.orderRepo.count({ adminId: adminObjectId, status: OrderStatus.COMPLETED }),
-      this.orderRepo.count({ adminId: adminObjectId, createdAt: { $gte: today } }),
-      this.orderRepo.getTodayRevenue(adminId),
+      this.orderRepo.getTodayOrdersCount(adminId, startOfDay, endOfDay),
+      this.orderRepo.getTodayRevenue(adminId, startOfDay, endOfDay),
       this.orderRepo.getTotalRevenue(adminId),
       this.userRepo.getTotalClientsBalance(adminId),
       this.userRepo.getTotalClientsDebt(adminId),
@@ -139,7 +138,8 @@ export class UserService {
       totalClientsDebt,
       recentOrders,
       totalLists,
-      totalSims
+      totalSims,
+      todayDate: startOfDay.toISOString()
     };
   }
 

@@ -25,6 +25,8 @@ const notification_routes_1 = __importDefault(require("./routes/notification.rou
 const admin_routes_1 = __importDefault(require("./routes/admin.routes"));
 const recharge_routes_1 = __importDefault(require("./routes/recharge.routes"));
 const chat_routes_1 = __importDefault(require("./routes/chat.routes"));
+const path_1 = __importDefault(require("path"));
+const recharge_cleanup_service_1 = require("./services/recharge-cleanup.service");
 const createApp = () => {
     const app = (0, express_1.default)();
     // 1. Security Middlewares
@@ -42,8 +44,13 @@ const createApp = () => {
     app.use((0, cors_1.default)(corsOptions));
     app.options('*', (0, cors_1.default)(corsOptions));
     // 2. Parsing Middlewares
-    app.use(express_1.default.json({ limit: '10mb' }));
-    app.use(express_1.default.urlencoded({ extended: true }));
+    app.use(express_1.default.json({ limit: '15mb' }));
+    app.use(express_1.default.urlencoded({ extended: true, limit: '15mb' }));
+    // Static files for uploaded recharge screenshots
+    (0, recharge_cleanup_service_1.ensureUploadsDirExists)();
+    app.use('/uploads', express_1.default.static(path_1.default.join(process.cwd(), 'uploads')));
+    // Initialize 7-day auto-cleanup timer for recharge screenshots
+    (0, recharge_cleanup_service_1.startPeriodicScreenshotCleanup)();
     // 3. Observability
     app.use(logger_middleware_1.requestLogger);
     // 4. Rate Limiting for general API

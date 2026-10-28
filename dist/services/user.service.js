@@ -16,6 +16,7 @@ const recharge_list_repository_1 = require("../repositories/recharge-list.reposi
 const sim_repository_1 = require("../repositories/sim.repository");
 const types_1 = require("../types");
 const errors_1 = require("../utils/errors");
+const date_util_1 = require("../utils/date.util");
 const socket_service_1 = require("../sockets/socket.service");
 const fcm_service_1 = require("./fcm.service");
 class UserService {
@@ -76,8 +77,7 @@ class UserService {
         };
     }
     async getAdminDashboard(adminId) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const { startOfDay, endOfDay } = (0, date_util_1.getTunisiaDayBounds)();
         const adminObjectId = new mongoose_1.Types.ObjectId(adminId);
         const [totalClients, pendingClients, activeClients, blockedClients, totalOrders, pendingOrders, completedOrders, todayOrders, todayRevenue, totalRevenue, totalClientsBalance, totalClientsDebt, recentOrders, totalLists, totalSims] = await Promise.all([
             this.userRepo.count({ role: types_1.UserRole.CLIENT, adminId: adminObjectId }),
@@ -87,8 +87,8 @@ class UserService {
             this.orderRepo.count({ adminId: adminObjectId }),
             this.orderRepo.count({ adminId: adminObjectId, status: types_1.OrderStatus.PENDING }),
             this.orderRepo.count({ adminId: adminObjectId, status: types_1.OrderStatus.COMPLETED }),
-            this.orderRepo.count({ adminId: adminObjectId, createdAt: { $gte: today } }),
-            this.orderRepo.getTodayRevenue(adminId),
+            this.orderRepo.getTodayOrdersCount(adminId, startOfDay, endOfDay),
+            this.orderRepo.getTodayRevenue(adminId, startOfDay, endOfDay),
             this.orderRepo.getTotalRevenue(adminId),
             this.userRepo.getTotalClientsBalance(adminId),
             this.userRepo.getTotalClientsDebt(adminId),
@@ -111,7 +111,8 @@ class UserService {
             totalClientsDebt,
             recentOrders,
             totalLists,
-            totalSims
+            totalSims,
+            todayDate: startOfDay.toISOString()
         };
     }
     async listUsers(params) {

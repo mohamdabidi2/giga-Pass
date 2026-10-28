@@ -10,6 +10,9 @@ export interface IRechargeHistory extends Document {
   deductedGiga: number;
   balanceBefore: number;
   balanceAfter: number;
+  screenshot?: string;
+  screenshotUploadedAt?: Date;
+  screenshotExpired?: boolean;
   completedAt: Date;
   createdAt: Date;
 }
@@ -64,6 +67,18 @@ const rechargeHistorySchema = new Schema<IRechargeHistory>(
       type: Date,
       required: true,
       default: Date.now
+    },
+    screenshot: {
+      type: String,
+      default: null
+    },
+    screenshotUploadedAt: {
+      type: Date,
+      default: null
+    },
+    screenshotExpired: {
+      type: Boolean,
+      default: false
     }
   },
   {
